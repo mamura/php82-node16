@@ -1,0 +1,2 @@
+- docker build -t ghcr.io/mamura/php82-node16:latest .
+- docker push ghcr.io/mamura/php82-node16:latest

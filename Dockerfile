@@ -8,10 +8,10 @@ RUN echo $TZ > /etc/timezone \
 
 RUN apt-get update \
     && apt-get -y upgrade \
-    && apt-get install -iqq \
+    && apt-get install -yqq \
     lsb-release \
     ca-certificates \
-    apt-transport-http \
+    apt-transport-https \
     software-properties-common \
     libaio1 \
     libaio-dev \
@@ -25,7 +25,7 @@ RUN apt-get update \
     bash \
     wget
 
-RUN add-repository ppa:ondrej/php \
+RUN add-apt-repository ppa:ondrej/php \
     && apt-get -yqq update
 
 WORKDIR /src
@@ -37,3 +37,54 @@ RUN curl -sL https://deb.nodesource.com/setup_16.x 565 | bash - \
 # NGINX
 RUN apt-get -y install nginx
 COPY app.conf /etc/nginx/conf.d/app.conf
+
+# PHP82
+RUN apt-get update \
+    && apt-get install -yqq php8.2 \
+    php8.2-common \
+    php8.2-fpm \
+    php8.2-dev \
+    php8.2-pdo \
+    php8.2-opcache \
+    php8.2-zip \
+    php8.2-phar \
+    php8.2-iconv \
+    php8.2-cli \
+    php8.2-curl \
+    php8.2-mbstring \
+    php8.2-tokenizer \
+    php8.2-fileinfo \
+    php8.2-xml \
+    php8.2-xmlwriter \
+    php8.2-simplexml \
+    php8.2-dom \
+    php8.2-tokenizer \
+    php8.2-redis \
+    php8.2-xdebug \
+    php8.2-gd \
+    php8.2-mysql 
+
+RUN linhas=$(grep -m1 -n "listen =" /etc/php/8.2/fpm/pool.d/www.conf | cut -f1 -d:) \
+    && sed -i "${linhas}d" /etc/php/8.2/fpm/pool.d/www.conf \
+    && sed -i "${linhas}i listen=127.0.0.1:9000" /etc/php/8.2/fpm/pool.d/www.conf
+
+# Xdebug
+COPY xdebug.ini "${PHP_INI_DIR}/conf.d"
+
+# Composer
+RUN curl -sS https://getcomposer.org/installer -o composer-setup.php
+RUN php -r "if (hash_file('sha384', 'composer-setup.php') === 'e21205b207c3ff031906575712edab6f13eb0b361f2085f1f1237b7126d785e826a450292b6cfd1d64d92e6563bbde02') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+RUN php composer-setup.php
+RUN php -r "unlink('composer-setup.php');"
+
+# Supervisor
+RUN mkdir -p /etc/supervisor.d/
+COPY supervisord.ini /etc/supervisor.d/supervisord.ini
+
+# Entrypoint
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+EXPOSE 80
+
+CMD [ "supervisord", "-c", "/etc/supervisor.d/supervisord.ini" ]

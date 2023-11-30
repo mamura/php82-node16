@@ -62,11 +62,21 @@ RUN apt-get update \
     php8.2-redis \
     php8.2-xdebug \
     php8.2-gd \
-    php8.2-mysql 
+    php8.2-mysql \
+    php8.2-ldap 
 
+# Configuracoes do PHP
 RUN linhas=$(grep -m1 -n "listen =" /etc/php/8.2/fpm/pool.d/www.conf | cut -f1 -d:) \
     && sed -i "${linhas}d" /etc/php/8.2/fpm/pool.d/www.conf \
     && sed -i "${linhas}i listen=127.0.0.1:9000" /etc/php/8.2/fpm/pool.d/www.conf
+
+RUN max_cli=$(grep -m1 -n "max_execution_time" /etc/php/8.2/cli/php.ini | cut -f1 -d:) \
+    && sed -i "${max_cli}d" /etc/php/8.2/cli/php.ini \
+    && sed -i "${max_cli}i max_execution_time = 240" /etc/php/8.2/cli/php.ini 
+
+RUN max_fpm=$(grep -m1 -n "max_execution_time" /etc/php/8.2/fpm/php.ini | cut -f1 -d:) \
+    && sed -i "${max_fpm}d" /etc/php/8.2/fpm/php.ini \
+    && sed -i "${max_fpm}i max_execution_time = 240" /etc/php/8.2/fpm/php.ini 
 
 # Xdebug
 COPY xdebug.ini "${PHP_INI_DIR}/conf.d"

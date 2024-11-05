@@ -13,7 +13,7 @@ RUN apt-get update \
     ca-certificates \
     apt-transport-https \
     software-properties-common \
-    libaio1 \
+    #libaio1 \
     libaio-dev \
     g++ \
     make \
@@ -82,9 +82,10 @@ RUN max_fpm=$(grep -m1 -n "max_execution_time" /etc/php/8.2/fpm/php.ini | cut -f
 COPY xdebug.ini "${PHP_INI_DIR}/conf.d"
 
 # Composer
+ARG HASH="`curl -sS https://composer.github.io/installer.sig`"
 RUN curl -sS https://getcomposer.org/installer -o composer-setup.php
-RUN php -r "if (hash_file('sha384', 'composer-setup.php') === 'e21205b207c3ff031906575712edab6f13eb0b361f2085f1f1237b7126d785e826a450292b6cfd1d64d92e6563bbde02') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-RUN php composer-setup.php
+RUN php -r "if (hash_file('sha384', 'composer-setup.php') === $HASH) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+RUN php composer-setup.php --install-dir=/bin --filename=composer
 RUN php -r "unlink('composer-setup.php');"
 
 # Supervisor

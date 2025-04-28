@@ -23,7 +23,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag php82-node16:latest
+        run: docker build . --file Dockerfile --tag ghcr.io/mamura/php82-node16:latest
 
       - name: Push the Docker image
         run: docker push ghcr.io/mamura/php82-node16:latest

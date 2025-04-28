@@ -63,7 +63,9 @@ RUN apt-get update \
     php8.2-xdebug \
     php8.2-gd \
     php8.2-mysql \
-    php8.2-ldap 
+    php8.2-ldap \
+    php8.2-sqlite3 \
+    php8.2-intl
 
 # Configuracoes do PHP
 RUN linhas=$(grep -m1 -n "listen =" /etc/php/8.2/fpm/pool.d/www.conf | cut -f1 -d:) \
@@ -79,7 +81,7 @@ RUN max_fpm=$(grep -m1 -n "max_execution_time" /etc/php/8.2/fpm/php.ini | cut -f
     && sed -i "${max_fpm}i max_execution_time = 240" /etc/php/8.2/fpm/php.ini 
 
 # Xdebug
-COPY xdebug.ini "${PHP_INI_DIR}/conf.d"
+#COPY xdebug.ini "${PHP_INI_DIR}/conf.d"
 
 # Composer
 ARG HASH="`curl -sS https://composer.github.io/installer.sig`"
